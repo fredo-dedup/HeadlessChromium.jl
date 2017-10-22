@@ -95,13 +95,13 @@ function OpenChromium()
   # launch chromium
   intpath = createPage(jport)
   # run(`cmd /c start $intpath`)
-  run(`xdg-open $intpath`)
+  # run(`xdg-open $intpath`)
 
   cport = findfreeport(9000)
   # chpath = joinpath("c:/homeware/Chromium/chrome-win32", "chrome.exe")
   opt1, opt2, opt3 = "--headless", "--disable-gpu", "--remote-debugging-port=$cport"
-  # chproc = spawn(`$chpath $opt1 $opt2 $opt3 "file://$intpath"`)
-  chproc = spawn(`$chromium $opt1 $opt2 $opt3 "http://www.yahoo.fr"`)
+  chproc = spawn(`$chromium $opt1 $opt2 $opt3 "file://$intpath"`)
+  # chproc = spawn(`$chromium $opt1 $opt2 $opt3 "http://www.yahoo.fr"`)
 
   # connect intermediary to chrome devtools interface
   resp = retry(HTTP.get, delays=[1,2,5,10])("http://localhost:$cport/json")
@@ -120,10 +120,13 @@ function OpenChromium()
     for m in inchan
       msg = JSON.parse(m)
       println("received $msg")
-      if haskey(msg, "id") && haskey(pending, msg["id"])
-        put!(pending[msg["id"]], msg)
+      if haskey(msg, "id")
+        if haskey(pending, msg["id"])
+          put!(pending[msg["id"]], msg)
+        else
+          warn("undispatchable msg : $msg")
       else
-        warn("undispatchable msg : $msg")
+        info("event : $msg")
       end
     end
     println("closing listen loop")
@@ -226,5 +229,34 @@ sess = openSession(mychro, "file:///c:/temp/VegaLite plot.html")
 
 resp = send(sess, method="Page.printToPDF",
      params=Dict(:path => "c:/temp/essai.pdf", :format => "A4"))
+isready(resp)
+take!(resp)
+
+
+#####################################################################
+
+using HeadlessChromium
+
+ch = HeadlessChromium.openChromium()
+
+respch = send(ch, "Browser.getVersion")
+isready(respch)
+take!(respch)
+
+
+respch = send(ch, "Target.setDiscoverTargets", discover=true)
+retry(ch -> (println("+") ; isready(ch) ? nothing : error("no response")), delays=[0.,1.,1.,1.])(respch)
+isready(respch)
+take!(respch)
+
+respch = send(ch, "Target.createTarget", url="file:///c:/temp/VegaLite plot.html")
+isready(respch)
+take!(respch)
+
+
+sess = HeadlessChromium.openSession(ch, "file:///home/fred/juliaX7ZJ5a.vegalite.html")
+
+
+resp = send(sess, "Page.printToPDF", path="/tmp/essai.pdf", format="A4")
 isready(resp)
 take!(resp)
