@@ -1,0 +1,65 @@
+<!doctype html>
+<html><head>
+<script type="text/javascript">
+
+const serverPort = {{{:port}}};
+var csocket = {};
+
+const jul_uri = 'ws://localhost:' + serverPort
+var jsocket = new WebSocket(jul_uri);
+console.log('listening on : ' +  jul_uri);
+
+jsocket.onopen = function() {
+  jsocket.onmessage = function(response) {
+    var msg = JSON.parse(response.data);
+    console.log("jsocket msg : ")
+    console.log(msg);
+
+    switch(msg.command) {
+      case 'connect':
+        var nsocket = new WebSocket(msg.uri);
+
+        csocket[msg.uri] = nsocket;
+
+        nsocket.onopen = function() {
+          nsocket.onmessage = function(response) {
+            var msg = JSON.parse(response.data);
+            console.log("nsocket msg : ")
+            console.log(msg);
+
+            jsocket.send(response.data);
+          };
+        };
+
+        nsocket.onerror= msg => console.log("nsocket error: " + msg);
+        nsocket.onclose= () => console.log("nsocket closing");
+
+        break;
+
+      case 'send':
+        if (typeof csocket[msg.session] !== 'undefined') {
+          console.log('forwarding to chromium')
+          csocket[msg.session].send(JSON.stringify(msg.payload))
+        } else {
+          console.log('wsocket to this session not yet defined')
+        }
+        break;
+
+      default:
+        break;
+    }
+
+  };
+}
+
+jsocket.onerror= function(msg) {
+  console.log("jsocket error: ");
+  console.log(msg);
+}
+
+jsocket.onclose= function() {
+  console.log("jsocket closing");
+}
+
+</script>
+</head>
