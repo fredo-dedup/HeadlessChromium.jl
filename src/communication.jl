@@ -115,7 +115,7 @@ function Chromium()
       if haskey(msg, "id")
         if haskey(newchromium.pending, msg["id"])
           cbk = newchromium.pending[msg["id"]] # resp callback
-          isa(cbk, Void) || cbk(msg)
+          isa(cbk, Void) || Base.invokelatest(cbk, msg)
           delete!(newchromium.pending, msg["id"])
         else
           warn("undispatchable msg : $msg")
@@ -148,6 +148,7 @@ Opens a new Chromium 'target', i.e. the page at the given url.
 function Target(url::String)
   if isa(chromiumHandle, Void)
     global chromiumHandle = Chromium()
+    sleep(3)
   end
 
   gotresp = Condition()
@@ -162,9 +163,6 @@ function Target(url::String)
 
   Target(URIParser.URI(wait(gotresp)))
 end
-
-suri = URIParser.URI("ws://localhost:9225/devtools/page/qg546gf")
-@sprintf("%s", suri)
 
 function send(callback::Union{Function,Void},
               tgt::Target, method::String ; args...)
