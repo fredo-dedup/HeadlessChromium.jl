@@ -1,10 +1,10 @@
 """
-findfreeport(port::Int64) -> String
+createPage(port::Int64) -> String
 
 Creates the proxy page attaching to the given WebSocket port (Julia side).
 This page allows communication between Julia and the Chrome DevTools interface.
 """
-function createPage(port::Int)
+function createPage(port::Int64)
   tmppath = tempname() * ".html"
 
   open(tmppath, "w") do io
@@ -25,4 +25,54 @@ function findfreeport(porthint::Int64=5000)
     xport, sock = listenany(porthint)
     close(sock)
     Int(xport)
+end
+
+
+
+
+"""
+launchServer(outchan::Channel, inchan::Channel, port::Int)
+
+Starts the WebSocket server that will send and receive messages from the
+proxy page.
+"""
+function launchServer(outchan::Channel, inchan::Channel, port::Int)
+  wsh = WebSocketHandler() do req,client
+
+    @async begin  # listening loop
+      info("starting inbound loop")
+      while isopen(client) && isopen(inchan)
+        try
+          msg = String(read(client))
+          put!(inchan, msg)
+        catch e
+          warn("error in reception loop : $e")
+        end
+      end
+      info("exiting inbound loop (port $port)")
+    end
+
+    # outgoing message loop
+    info("starting outbound loop")
+    for m in outchan
+      info("sending $m")
+      try
+        write(client, m)
+      catch e
+      end
+    end
+
+    info("exiting outbound loop (port $port)")
+  end
+
+  handler = HttpHandler() do req, res
+    rsp = Response(100)
+    rsp.headers["Access-Control-Allow-Origin"] = "http://localhost:8080"
+    rsp.headers["Access-Control-Allow-Credentials"] = "true"
+    rsp
+  end
+
+  server = Server(handler, wsh)
+  @async run(server, port)
+  server
 end

@@ -5,7 +5,7 @@ import HTTP, URIParser, Mustache, JSON
 
 import Base: send, close
 
-export Target, send, close
+export Target, TimeoutError, send, close
 
 
 ### Initialize the const pointing to the Chromium executable
@@ -21,6 +21,7 @@ isfile(depsjl) ? include(depsjl) : error("HeadlessChromium not properly ",
 global chromiumHandle = nothing
 
 include("communication.jl")
+include("send.jl")
 include("misc.jl")
 
 
