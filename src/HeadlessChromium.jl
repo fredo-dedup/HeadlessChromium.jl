@@ -7,6 +7,7 @@ import Base: send, close
 
 export Target, TimeoutError, send, close
 
+global const DEBUG = false
 
 ### Initialize the const pointing to the Chromium executable
 

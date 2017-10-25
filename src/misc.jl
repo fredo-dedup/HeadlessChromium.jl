@@ -40,7 +40,7 @@ function launchServer(outchan::Channel, inchan::Channel, port::Int)
   wsh = WebSocketHandler() do req,client
 
     @async begin  # listening loop
-      info("starting inbound loop")
+      DEBUG && info("starting inbound loop")
       while isopen(client) && isopen(inchan)
         try
           msg = String(read(client))
@@ -49,20 +49,20 @@ function launchServer(outchan::Channel, inchan::Channel, port::Int)
           warn("error in reception loop : $e")
         end
       end
-      info("exiting inbound loop (port $port)")
+      DEBUG && info("exiting inbound loop (port $port)")
     end
 
     # outgoing message loop
-    info("starting outbound loop")
+    DEBUG && info("starting outbound loop")
     for m in outchan
-      info("sending $m")
+      DEBUG && info("sending $m")
       try
         write(client, m)
       catch e
       end
     end
 
-    info("exiting outbound loop (port $port)")
+    DEBUG && info("exiting outbound loop (port $port)")
   end
 
   handler = HttpHandler() do req, res

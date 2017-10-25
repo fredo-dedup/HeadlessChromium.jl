@@ -3,11 +3,12 @@ abstract type AbstractTarget end
 
 struct Target <: AbstractTarget
   chromiumWebSocket::URIParser.URI    # websocket server for the target
+  targetId::String                    # target id in chromium
 end
 
 struct Chromium <: AbstractTarget
   chromiumWebSocket::URIParser.URI    # websocket server for the target
-  # eventCallback::Union{Function,Void} # callback function for events
+  targetId::String                    # target id in chromium
   server::HttpServer.Server  # julia websocket server
   cprocess::Base.Process     # Headless Chromium process
   outchan::Channel{String}   # Channel for outgoing messages
@@ -20,7 +21,7 @@ end
 
 
 """
-Chromium(outchan::Channel, inchan::Channel, port::Int)
+    Chromium(outchan::Channel, inchan::Channel, port::Int)
 
 Starts the chromium process and connects the websockets.
 """
@@ -43,16 +44,16 @@ function Chromium()
       opt1, opt2, opt3 = "--headless", "--disable-gpu", "--remote-debugging-port=$cport"
       chproc = spawn(`$chromium $opt1 $opt2 $opt3 "file://$intpath"`)
 
-      # connect intermediary to chrome devtools interface
+      # connect ws proxy page to chrome devtools interface
       resp = retry(HTTP.get, delays=[1,2,5,10])("http://localhost:$cport/json")
       tdemp = JSON.parse(String(resp.body.buffer))
       pdict = findfirst(d -> haskey(d,"type") && d["type"]=="page", tdemp)
-      pdict == 0 && error("beuh..")
+      pdict == 0 && error("")
       wsuri = tdemp[pdict]["webSocketDebuggerUrl"]
 
       put!(outchan, JSON.json(Dict(:command => "connect", :uri => wsuri)))
 
-      Chromium(URIParser.URI(wsuri), # nothing,
+      Chromium(URIParser.URI(wsuri), tdemp[pdict]["id"],
                server, chproc, outchan, inchan,
                cport, jport,
                Dict(), Dict())
@@ -67,7 +68,7 @@ function Chromium()
   @async begin
     for m in inchan
       msg = JSON.parse(m)
-      info("received $msg")
+      DEBUG && info("received $msg")
       if haskey(msg, "id") # response to a command
         if haskey(newchromium.id2callbacks, msg["id"])
           cb = newchromium.id2callbacks[msg["id"]] # resp callback
@@ -96,17 +97,17 @@ function Chromium()
   newchromium
 end
 
-# function close(chro::Chromium)
-#   kill(chro.cprocess)
-#   close(chro.outchan)
-#   close(chro.inchan)
-#   close(chro.server)
-#   foreach(close, values(chro.id2callbacks))
-# end
+
+function close(ch::Chromium)
+  kill(ch.cprocess)
+  close(ch.outchan)
+  close(ch.inchan)
+  close(ch.server)
+end
 
 
 """
-Target(url::String)
+    Target(url::String) -> Target
 
 Opens a new Chromium 'target', i.e. the page at the given url.
 """
@@ -126,19 +127,16 @@ function Target(url::String, eventCallback::Union{Void,Function}=nothing)
   wsuri = URIParser.URI(targetws)
   chromiumHandle.ws2callbacks[wsuri] = eventCallback
 
-  Target(wsuri)
+  Target(wsuri, targetId)
 end
 
 
 """
-close(tgt::Target)
+    close(tgt::Target)
 
 Closes the target, and frees up associated ressources.
 """
 function close(tgt::Target)
-  kill(chro.cprocess)
-  close(chro.outchan)
-  close(chro.inchan)
-  close(chro.server)
-  foreach(close, values(chro.pending))
+  send(chromiumHandle, "Target.closeTarget", targetId=tgt.targetId)
+  delete!(chromiumHandle.ws2callbacks, tgt.chromiumWebSocket)
 end
