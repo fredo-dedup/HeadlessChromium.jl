@@ -23,11 +23,12 @@ jsocket.onopen = function() {
 
         nsocket.onopen = function() {
           nsocket.onmessage = function(response) {
-            var msg = JSON.parse(response.data);
+            var msg2 = JSON.parse(response.data);
+            msg2["origin"] = msg.uri;
             console.log("nsocket msg : ")
-            console.log(msg);
+            console.log(msg2);
 
-            jsocket.send(response.data);
+            jsocket.send(JSON.stringify(msg2));
           };
         };
 
