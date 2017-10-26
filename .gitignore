@@ -3,5 +3,5 @@
 *.jl.mem
 deps/downloads/*
 deps/usr/*
-deps/usr/deps.jl
+deps/deps.jl
 .directory
