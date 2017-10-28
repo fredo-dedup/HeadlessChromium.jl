@@ -79,14 +79,18 @@ function Chromium()
         end
 
       elseif haskey(msg, "method") # likely an event, forward to the event callback
-        srcws = URIParser.URI(msg["origin"])
-        if haskey(newchromium.ws2callbacks, srcws)
-          ecb = newchromium.ws2callbacks[srcws]
-          isa(ecb, Function) && try Base.invokelatest(ecb, msg) end
+        if ismatch(r"/([^/]*)$", msg["origin"])
+          targetId = match(r"/([^/]*)$", msg["origin"]).captures[1]
+          # maURIParser.URI(msg["origin"])
+          if haskey(newchromium.ws2callbacks, targetId)
+            ecb = newchromium.ws2callbacks[targetId]
+            isa(ecb, Function) && try Base.invokelatest(ecb, msg) end
+          else
+            warn("undispatchable event : $msg")
+          end
         else
           warn("undispatchable event : $msg")
         end
-
       else
         warn("received msg is neither a command result nor an event : $msg")
       end
@@ -124,10 +128,11 @@ function Target(url::String, eventCallback::Union{Void,Function}=nothing)
   put!(chromiumHandle.outchan, JSON.json(Dict(:command => "connect", :uri => targetws)))
 
   # register callback for events
-  wsuri = URIParser.URI(targetws)
-  chromiumHandle.ws2callbacks[wsuri] = eventCallback
+  chromiumHandle.ws2callbacks[targetId] = eventCallback
 
-  Target(wsuri, targetId)
+  nt = Target(URIParser.URI(targetws), targetId)
+  # finalizer(nt, close) # close page, remove event callback # mutable objects only
+  nt
 end
 
 
