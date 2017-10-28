@@ -13,8 +13,8 @@ struct Chromium <: AbstractTarget
   cprocess::Base.Process     # Headless Chromium process
   outchan::Channel{String}   # Channel for outgoing messages
   inchan::Channel            # Channel for received messages
-  chromiumport::Int64        # Chromium websocket port
-  juliaport::Int64           # Julia websocket port
+  chromiumport::Int        # Chromium websocket port
+  juliaport::Int           # Julia websocket port
   id2callbacks::Dict         # command callbacks (by command id)
   ws2callbacks::Dict         # event callbacks (by ws uri)
 end
@@ -60,7 +60,7 @@ function Chromium()
     catch e
       isopen(inchan) && close(inchan)
       isopen(outchan) && close(outchan)
-      process_running(chproc) && kill(chproc)
+      (chproc!=nothing) && process_running(chproc) && kill(chproc)
       error("could not establish connection to chromium, $e")
     end
 

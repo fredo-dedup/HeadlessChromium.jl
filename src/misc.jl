@@ -1,10 +1,10 @@
 """
-createPage(port::Int64) -> String
+createPage(port::Int) -> String
 
 Creates the proxy page attaching to the given WebSocket port (Julia side).
 This page allows communication between Julia and the Chrome DevTools interface.
 """
-function createPage(port::Int64)
+function createPage(port::Int)
   tmppath = tempname() * ".html"
 
   open(tmppath, "w") do io
@@ -17,11 +17,11 @@ end
 
 
 """
-findfreeport([port_hint::Int64]) -> Int64
+findfreeport([port_hint::Int]) -> Int
 
 Finds the first available port on localhost.
 """
-function findfreeport(porthint::Int64=5000)
+function findfreeport(porthint::Int=5000)
     xport, sock = listenany(porthint)
     close(sock)
     Int(xport)

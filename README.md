@@ -1,10 +1,12 @@
 # HeadlessChromium
 
-[![Build Status](https://travis-ci.org/fredo-dedup/HeadlessChromium.jl.svg?branch=master)](https://travis-ci.org/fredo-dedup/HeadlessChromium.jl)
+_A Julia wrapper for Chromium_
 
-[![Coverage Status](https://coveralls.io/repos/fredo-dedup/HeadlessChromium.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/fredo-dedup/HeadlessChromium.jl?branch=master)
 
-[![codecov.io](http://codecov.io/github/fredo-dedup/HeadlessChromium.jl/coverage.svg?branch=master)](http://codecov.io/github/fredo-dedup/HeadlessChromium.jl?branch=master)
+|Julia versions | master build | Coverage |
+|:-------------:|:------------:|:--------:|
+|[![HeadlessChromium](http://pkg.julialang.org/badges/HeadlessChromium_0.6.svg)](http://pkg.julialang.org/?pkg=HHeadlessChromium&ver=0.6) | [![Build Status](https://travis-ci.org/fredo-dedup/HeadlessChromium.jl.svg?branch=master)](https://travis-ci.org/fredo-dedup/HeadlessChromium.jl) [![Build status](https://ci.appveyor.com/api/projects/status/i73ux5hw69rn5c48/branch/master?svg=true)](https://ci.appveyor.com/project/fredo-dedup/headlesschromium-jl/branch/master) | [![Coverage Status](https://coveralls.io/repos/fredo-dedup/HeadlessChromium.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/fredo-dedup/HeadlessChromium.jl?branch=master) |
+
 
 
 This package is a Julia wrapper for the Google Chromium web browser. The Browser
@@ -27,6 +29,14 @@ Opening a new page (a 'target'):
 using HeadlessChromium
 
 myTarget = Target("about:") # open the 'about:' page
+```
+
+Opening a new page, and capture events emitted in a callback function:
+
+```julia
+mycallback(resp) = info(resp, prefix="event : ") # will be called for each event
+
+myTarget2 = Target("http://www.yahoo.com", mycallback)
 ```
 
 Sending a command to the page and waiting for the result:

@@ -4,7 +4,7 @@ using Base.Test
 # open dummy target ('about:'' page)
 
 tg1 = Target("about:")
-sleep(1)
+sleep(5)
 resp = send(tg1, "Browser.getVersion")
 
 @test haskey(resp, "result")
@@ -17,7 +17,7 @@ close(tg1)
 
 src = joinpath(dirname(@__FILE__), "example.html")
 tg2 = Target("file://$src")
-sleep(1)
+sleep(5)
 
 plotfile = tempname()
 send(tg2, "Page.printToPDF", format="A4") do resp
@@ -25,7 +25,7 @@ send(tg2, "Page.printToPDF", format="A4") do resp
         write(io, base64decode(resp["result"]["data"]))
     end
 end
-sleep(1)  # give some time for isfile() to update
+sleep(5)  # give some time for isfile() to update
 
 @test isfile(plotfile)
 @test stat(plotfile).size > 5000
@@ -33,7 +33,7 @@ sleep(1)  # give some time for isfile() to update
 # navigate to another URL
 
 resp = send(tg2, "Page.navigate", url="https://www.yahoo.com")
-sleep(2)
+sleep(5)
 @test haskey(resp, "result")
 
 resp = send(tg2, "DOM.getDocument")

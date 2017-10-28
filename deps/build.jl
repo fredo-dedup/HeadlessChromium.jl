@@ -14,7 +14,7 @@ const googlehost = "https://storage.googleapis.com/chromium-browser-snapshots/"
 
 const DOWNLOADS = Dict(
     "Linux-x86_64"   => ("Linux_x64/$revision/chrome-linux.zip", "chrome-linux/chrome"),
-    "Darwin-x86_64"  => ("Mac/$revision/chrome-mac.zip",         ""),
+    "Darwin-x86_64"  => ("Mac/$revision/chrome-mac.zip",         "chrome-mac/Chromium.app/Contents/MacOS/Chromium"),
     "Windows-x86_64" => ("Win_x64/$revision/chrome-win32.zip",   "chrome-win32/chrome.exe"),
     "Windows-i686"   => ("Win/$revision/chrome-win32.zip",       "chrome-win32/chrome.exe")
 )
