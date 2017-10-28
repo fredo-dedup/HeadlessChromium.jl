@@ -4,8 +4,8 @@ using Base.Test
 # open dummy target ('about:'' page)
 
 tg1 = Target("about:")
+sleep(1)
 resp = send(tg1, "Browser.getVersion")
-resp = send(HeadlessChromium.chromiumHandle, "Browser.getVersion")
 
 @test haskey(resp, "result")
 @test haskey(resp["result"], "protocolVersion")
@@ -17,6 +17,7 @@ close(tg1)
 
 src = joinpath(dirname(@__FILE__), "example.html")
 tg2 = Target("file://$src")
+sleep(1)
 
 plotfile = tempname()
 send(tg2, "Page.printToPDF", format="A4") do resp
@@ -32,6 +33,7 @@ sleep(1)  # give some time for isfile() to update
 # navigate to another URL
 
 resp = send(tg2, "Page.navigate", url="https://www.yahoo.com")
+sleep(2)
 @test haskey(resp, "result")
 
 resp = send(tg2, "DOM.getDocument")
