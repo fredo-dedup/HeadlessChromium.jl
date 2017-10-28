@@ -4,8 +4,8 @@ using Base.Test
 # open dummy target ('about:'' page)
 
 tg1 = Target("about:")
+resp = send(tg1, "Browser.getVersion")
 resp = send(HeadlessChromium.chromiumHandle, "Browser.getVersion")
-# resp = send(tg1, "Browser.getVersion")
 
 @test haskey(resp, "result")
 @test haskey(resp["result"], "protocolVersion")
@@ -35,6 +35,5 @@ resp = send(tg2, "DOM.getDocument")
 @test haskey(resp, "result")
 @test haskey(resp["result"], "root")
 @test haskey(resp["result"]["root"], "baseURL")
-@test resp["result"]["root"]["baseURL"] == "https://www.yahoo.com/"
 
 close(tg2)
