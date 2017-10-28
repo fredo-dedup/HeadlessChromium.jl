@@ -8,10 +8,16 @@
 
 
 This package is a Julia wrapper for the Google Chromium web browser. The Browser
-is launched headless and is intended as a platform to process local or online
-html pages through the 'Chrome DevTools Protocol'.
-The DOM can be explored, changed, captured to a pdf document, input events can be
-simulated, etc. For a full documentation of the DevTools Protocol see :
+is launched headless and can be controlled from Julia through the 'Chrome
+DevTools Protocol'. The DOM can be explored, changed, captured to a pdf document,
+input events can be simulated, etc.
+
+Use this package to :
+- scrape web sites, automate form filling
+- test web applications
+- capture screenshots
+
+For a full documentation of the DevTools Protocol see :
 https://chromedevtools.github.io/devtools-protocol/tot
 
 

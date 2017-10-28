@@ -11,6 +11,8 @@ resp = send(HeadlessChromium.chromiumHandle, "Browser.getVersion")
 @test haskey(resp["result"], "protocolVersion")
 @test resp["result"]["protocolVersion"] == "1.2"
 
+close(tg1)
+
 # open file target
 
 src = joinpath(dirname(@__FILE__), "example.html")
@@ -22,6 +24,7 @@ send(tg2, "Page.printToPDF", format="A4") do resp
         write(io, base64decode(resp["result"]["data"]))
     end
 end
+sleep(1)  # give some time for isfile() to update
 
 @test isfile(plotfile)
 @test stat(plotfile).size > 5000
