@@ -9,15 +9,21 @@ event(resp) = info(resp, prefix="event : ")
 
 @time tg2 = Target("file://C:/temp/VegaLite plot.html", event)
 
+tg2 = Target("http://www.yahoo.com", event)
+tg2 = Target("http://www.yahoo.com")
+send(tg2, "Browser.getVersion")
+
 # send(HeadlessChromium.chromiumHandle, "Browser.getVersion")
 
 send(tg2, "Page.enable")
 
 send(tg2, "Page.printToPDF", format="A4") do resp
-    open("c:/temp/sandbox2.pdf", "w") do io
+    println("there")
+    open("/tmp/sandbox2.pdf", "w") do io
         write(io, base64decode(resp["result"]["data"]))
     end
 end
+println("here")
 
 send(tg2, "Page.captureScreenshot", format="png") do resp
     open("c:/temp/sandbox4.png", "w") do io
