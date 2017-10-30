@@ -65,12 +65,15 @@ function launchServer(outchan::Channel, inchan::Channel, port::Int)
     DEBUG && info("exiting outbound loop (port $port)")
   end
 
-  handler = HttpHandler() do req, res
+  handler = HttpHandler() do req::Request, res::Response
     rsp = Response(100)
     rsp.headers["Access-Control-Allow-Origin"] = "http://localhost:8080"
     rsp.headers["Access-Control-Allow-Credentials"] = "true"
     rsp
   end
+
+  handler.events["error"]  = (client, err) -> DEBUG ? println(err) : nothing
+  handler.events["listen"] = (port)        -> DEBUG ? println("Listening on $port...") : nothing
 
   server = Server(handler, wsh)
   @async run(server, port)
