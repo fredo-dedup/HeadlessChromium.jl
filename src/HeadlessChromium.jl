@@ -9,12 +9,15 @@ export Target, TimeoutError, send, close
 
 global const DEBUG = false
 
-### Initialize the const pointing to the Chromium executable
+### Set the const pointing to the Chromium executable
 
 depsjl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
 
-isfile(depsjl) ? include(depsjl) : error("HeadlessChromium not properly ",
-    "installed. Please run\nPkg.build(\"HeadlessChromium\")")
+isfile(depsjl) || error("""HeadlessChromium not properly installed.
+Please run
+   Pkg.build(\"HeadlessChromium\")""")
+
+include(depsjl)
 
 
 ### Includes + global var 'chromiumHandle' definition

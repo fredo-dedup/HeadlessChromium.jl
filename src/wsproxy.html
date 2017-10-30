@@ -9,6 +9,25 @@ const jul_uri = 'ws://localhost:' + serverPort
 var jsocket = new WebSocket(jul_uri);
 console.log('listening on : ' +  jul_uri);
 
+
+// Make the function wait until the connection is ready
+function waitForSocketConnection(socket, callback){
+  setTimeout(
+      function () {
+          if (socket.readyState === 1) {
+              if(callback != null){
+                  callback();
+              }
+              return;
+          } else {
+              waitForSocketConnection(socket, callback);
+          }
+
+      }, 100); // wait 100 milisecond
+}
+
+
+// send & receive callbacks
 jsocket.onopen = function() {
   jsocket.onmessage = function(response) {
     var msg = JSON.parse(response.data);
@@ -40,7 +59,11 @@ jsocket.onopen = function() {
       case 'send':
         if (typeof csocket[msg.session] !== 'undefined') {
           console.log('forwarding to chromium')
-          csocket[msg.session].send(JSON.stringify(msg.payload))
+
+          var ws = csocket[msg.session]
+          var msg2 = JSON.stringify(msg.payload)
+          waitForSocketConnection(ws, () => ws.send(msg2) )
+          // csocket[msg.session].send(JSON.stringify(msg.payload))
         } else {
           console.log('wsocket to this session not yet defined')
         }

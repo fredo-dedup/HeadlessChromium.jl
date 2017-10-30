@@ -72,8 +72,10 @@ function launchServer(outchan::Channel, inchan::Channel, port::Int)
     rsp
   end
 
-  handler.events["error"]  = (client, err) -> DEBUG ? println(err) : nothing
-  handler.events["listen"] = (port)        -> DEBUG ? println("Listening on $port...") : nothing
+  handler.events["error"]  =
+    (client, err) -> DEBUG ? println(err) : nothing
+  handler.events["listen"] =
+    (port) -> DEBUG ? println("Listening on $port...") : nothing
 
   server = Server(handler, wsh)
   @async run(server, port)

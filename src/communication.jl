@@ -21,11 +21,52 @@ end
 
 
 """
+    dispatcher()
+
+Dispatches messages received from Chromium.
+"""
+function dispatcher()
+  for m in chromiumHandle.inchan
+    msg = JSON.parse(m)
+    DEBUG && info("received $msg")
+
+    # Command result
+    if haskey(msg, "id")
+      if haskey(chromiumHandle.id2callbacks, msg["id"])
+        cb = chromiumHandle.id2callbacks[msg["id"]] # resp callback
+        isa(cb, Function) && try Base.invokelatest(cb, msg) end
+        delete!(chromiumHandle.id2callbacks, msg["id"])
+      else
+        warn("undispatchable command result : $msg")
+      end
+
+    # Event
+    elseif haskey(msg, "method") # likely an event, forward to the event callback
+      if ismatch(r"/([^/]*)$", msg["origin"])
+        targetId = match(r"/([^/]*)$", msg["origin"]).captures[1]
+        if haskey(chromiumHandle.ws2callbacks, targetId)
+          ecb = chromiumHandle.ws2callbacks[targetId]
+          isa(ecb, Function) && try Base.invokelatest(ecb, msg) end
+        else
+          warn("undispatchable event : $msg")
+        end
+      else
+        warn("undispatchable event : $msg")
+      end
+
+    else
+      warn("received msg that is neither a command result nor an event : $msg")
+    end
+  end
+  println("exiting listening loop")
+end
+
+"""
     Chromium(outchan::Channel, inchan::Channel, port::Int)
 
 Starts the chromium process and connects the websockets.
 """
-function Chromium()
+function startChromium()
   # launch julia websocket server
   jport   = findfreeport()
   inchan  = Channel(100) # Channel for inbound messages
@@ -34,11 +75,10 @@ function Chromium()
 
   # launch chromium
   intpath = createPage(jport)
-  # run(`cmd /c start $intpath`) ; run(`xdg-open $intpath`)
 
   chproc = nothing
 
-  newchromium =
+  global chromiumHandle =
     try
       cport = findfreeport(9225)
       opt1, opt2, opt3 = "--headless", "--disable-gpu", "--remote-debugging-port=$cport"
@@ -57,6 +97,7 @@ function Chromium()
                server, chproc, outchan, inchan,
                cport, jport,
                Dict(), Dict())
+
     catch e
       isopen(inchan) && close(inchan)
       isopen(outchan) && close(outchan)
@@ -65,40 +106,9 @@ function Chromium()
     end
 
   # async loop listening to received messages and dispatching them
-  @async begin
-    for m in inchan
-      msg = JSON.parse(m)
-      DEBUG && info("received $msg")
-      if haskey(msg, "id") # response to a command
-        if haskey(newchromium.id2callbacks, msg["id"])
-          cb = newchromium.id2callbacks[msg["id"]] # resp callback
-          isa(cb, Function) && try Base.invokelatest(cb, msg) end
-          delete!(newchromium.id2callbacks, msg["id"])
-        else
-          warn("undispatchable command result : $msg")
-        end
+  @async dispatcher()
 
-      elseif haskey(msg, "method") # likely an event, forward to the event callback
-        if ismatch(r"/([^/]*)$", msg["origin"])
-          targetId = match(r"/([^/]*)$", msg["origin"]).captures[1]
-          # maURIParser.URI(msg["origin"])
-          if haskey(newchromium.ws2callbacks, targetId)
-            ecb = newchromium.ws2callbacks[targetId]
-            isa(ecb, Function) && try Base.invokelatest(ecb, msg) end
-          else
-            warn("undispatchable event : $msg")
-          end
-        else
-          warn("undispatchable event : $msg")
-        end
-      else
-        warn("received msg is neither a command result nor an event : $msg")
-      end
-    end
-    println("closing listen loop")
-  end
-
-  newchromium
+  chromiumHandle
 end
 
 
@@ -117,8 +127,8 @@ Opens a new Chromium 'target', i.e. the page at the given url.
 """
 function Target(url::String, eventCallback::Union{Void,Function}=nothing)
   if isa(chromiumHandle, Void)
-    global chromiumHandle = Chromium()
-    sleep(3)
+    startChromium()
+    sleep(3) # FIXME : do better than a timed delay
   end
 
   resp = send(chromiumHandle, "Target.createTarget", url=url)
