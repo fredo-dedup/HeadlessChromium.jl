@@ -21,7 +21,7 @@ end
 
 
 """
-    dispatcher()
+    `dispatcher()`
 
 Dispatches messages received from Chromium.
 """
@@ -61,8 +61,9 @@ function dispatcher()
   println("exiting listening loop")
 end
 
+
 """
-    Chromium(outchan::Channel, inchan::Channel, port::Int)
+    `startChromium(outchan::Channel, inchan::Channel, port::Int)`
 
 Starts the chromium process and connects the websockets.
 """
@@ -112,16 +113,22 @@ function startChromium()
 end
 
 
-function close(ch::Chromium)
-  kill(ch.cprocess)
-  close(ch.outchan)
-  close(ch.inchan)
-  close(ch.server)
+"""
+    `stopChromium()`
+
+Stops the chromium process & the Julia websocket server, closes the channels.
+"""
+function stopChromium()
+  kill(chromiumHandle.cprocess)
+  close(chromiumHandle.outchan)
+  close(chromiumHandle.inchan)
+  close(chromiumHandle.server)
+  global chromiumHandle = nothing
 end
 
 
 """
-    Target(url::String) -> Target
+    `Target(url::String) -> Target`
 
 Opens a new Chromium 'target', i.e. the page at the given url.
 """
@@ -147,7 +154,7 @@ end
 
 
 """
-    close(tgt::Target)
+    `close(tgt::Target)`
 
 Closes the target, and frees up associated ressources.
 """

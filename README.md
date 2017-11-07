@@ -10,7 +10,7 @@ _A Julia wrapper for Chromium_
 
 
 This package is a Julia wrapper for the Google Chromium web browser. The Browser
-is launched headless and can be controlled from Julia through the 'Chrome
+is launched headless and is controlled from Julia over the 'Chrome
 DevTools Protocol'. The DOM can be explored, changed, captured to a pdf document,
 input events can be simulated, etc.
 
@@ -31,7 +31,7 @@ using HeadlessChromium
 myTarget = Target("about:") # open the 'about:' page
 ```
 
-Opening a new page, and capture events emitted in a callback function:
+Opening a new page, this time providing a callback function to capture events emitted.:
 
 ```julia
 mycallback(resp) = info(resp, prefix="event : ") # will be called for each event
@@ -45,6 +45,9 @@ Sending a command to the page and waiting for the result:
 resp = send(myTarget, "Browser.getVersion")
 # resp is a dictionary representation of the JSON returned by Chromium
 ```
+The synchronous version of `send` accepts a timeout keyword argument (default=5)
+specifying the number of seconds to wait before throwing a `TimeoutException`.
+
 
 Sending a command to the page asynchronously (i.e. without waiting for
 Chromium to respond):
@@ -62,4 +65,10 @@ Closing the target:
 
 ```julia
 close(myTarget)
+```
+
+Closing Chromium (will be relaunched automatically on the next `Target()` call):
+
+```julia
+stopChromium()
 ```

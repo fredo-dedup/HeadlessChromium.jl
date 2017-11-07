@@ -1,5 +1,5 @@
 """
-send(callback::Union{Function,Void}, tgt::Target, method::String ; args...)
+    send(callback::Union{Function,Void}, tgt::Target, method::String ; args...)
 
 Asynchronous version of `send`, returns immediatly. When Chromium responds,
 the `callback` function is called with the response as parameter.
@@ -28,7 +28,7 @@ end
 type TimeoutError <: Exception end
 
 """
-send(tgt::Target, method::String ; args...)
+    send(tgt::Target, method::String ; args...)
 
 Synchronous version of `send`, returns only when Chromium responds. The keyword
 argument `timeout` (default 5 sec) controls how much time we should wait for

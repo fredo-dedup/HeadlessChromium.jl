@@ -5,7 +5,7 @@ import HTTP, URIParser, Mustache, JSON
 
 import Base: send, close
 
-export Target, TimeoutError, send, close
+export Target, TimeoutError, send, close, stopChromium
 
 global const DEBUG = false
 

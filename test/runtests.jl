@@ -25,7 +25,7 @@ send(tg2, "Page.printToPDF", format="A4") do resp
         write(io, base64decode(resp["result"]["data"]))
     end
 end
-sleep(5)  # give some time for isfile() to update
+sleep(5)  # give some time for the file to be written
 
 @test isfile(plotfile)
 @test stat(plotfile).size > 5000
@@ -42,3 +42,5 @@ resp = send(tg2, "DOM.getDocument")
 @test haskey(resp["result"]["root"], "baseURL")
 
 close(tg2)
+
+stopChromium()
